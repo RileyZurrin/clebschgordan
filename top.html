@@ -6,7 +6,7 @@
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clebsch-Gordan</title>
+    <title>Clebsch-Gordan Calculator</title>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script id="MathJax-script" async
           src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
@@ -25,7 +25,7 @@
     <div class="input-group-container">
         <div class="input-group">
             <label for="input1" class="input-label">\(J\)</label>
-            <input type="number" id="input1" class="input-field" required>
+            <input type="text" id="input1" class="input-field" required>
             <div class="options-container">
                 <button class="fill-option" onclick="fillInput('input1', '1/2')">\(\frac{1}{2}\)</button>
                 <button class="fill-option" onclick="fillInput('input1', '1')">\(1\)</button>
@@ -38,7 +38,7 @@
 
         <div class="input-group">
             <label for="input2" class="input-label">\(M\)</label>
-            <input type="number" id="input2" class="input-field" required>
+            <input type="text" id="input2" class="input-field" required>
             <div class="options-container">
                 <button class="fill-option" onclick="fillInput('input2', '1/2')">\(\frac{1}{2}\)</button>
                 <button class="fill-option" onclick="fillInput('input2', '1')">\(1\)</button>
@@ -51,7 +51,7 @@
 
         <div class="input-group">
             <label for="input3" class="input-label">\(j_1\)</label>
-            <input type="number" id="input3" class="input-field" required>
+            <input type="text" id="input3" class="input-field" required>
             <div class="options-container">
                 <button class="fill-option" onclick="fillInput('input3', '1/2')">\(\frac{1}{2}\)</button>
                 <button class="fill-option" onclick="fillInput('input3', '1')">\(1\)</button>
@@ -64,7 +64,7 @@
 
         <div class="input-group">
             <label for="input4" class="input-label">\(j_2\)</label>
-            <input type="number" id="input4" class="input-field" required>
+            <input type="text" id="input4" class="input-field" required>
             <div class="options-container">
                 <button class="fill-option" onclick="fillInput('input4', '1/2')">\(\frac{1}{2}\)</button>
                 <button class="fill-option" onclick="fillInput('input4', '1')">\(1\)</button>
