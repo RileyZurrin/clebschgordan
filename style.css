@@ -1,0 +1,252 @@
+
+
+body {
+    font-family: "Montserrat", sans-serif;
+    text-align: center;
+}
+
+.banner {
+    background-color: #0073e6;
+    color: #fff;
+    text-align: center;
+    padding: 2% 0;
+    height: 7vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    border: 4px solid #f5f5f5d6;
+    border-radius: 10px;
+}
+
+.banner h1 {
+    font-size: 3.2vw;
+    margin: 0;
+
+    @media (min-width: 1200px) {
+        font-size: 2.3vw; /* Adjust the font size for larger screens */
+    }
+
+    @media (max-width: 768px) {
+        font-size: 4vw; /* Adjust the font size for smaller screens */
+    }
+}
+
+.banner-button {
+    position: absolute;
+    left: 1.5vw;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: #0073e6;
+    color: #fff;
+    border: 2px solid #fff;
+    padding: 1% 2%;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.3s, color 0.3s; 
+    font-size: 2vw;
+
+    @media (min-width: 1200px) {
+        font-size: 1.2vw; /* Adjust the font size for larger screens */
+    }
+
+    @media (max-width: 768px) {
+        font-size: 3vw; /* Adjust the font size for smaller screens */
+    }
+}
+
+.banner-button:hover {
+    background-color: #fff; 
+    border: 2px solid #0073e6;
+    color: #0073e6; 
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 80vh;
+}
+
+.option-box {
+    background-color: #f5f5f5;
+    border: 2px solid #f5f5f5;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px;
+    width: 70%;
+    height: 15%;
+    font-size: 2.4vw;
+    display: flex; /* Add this line */
+    justify-content: center;
+    align-items: center; /* Add this line to vertically align content */
+    transition: border 0.2s;
+
+    @media (max-width: 768px) {
+        font-size: 3vw; /* Adjust the font size for smaller screens */
+    }
+
+    @media (min-width: 1200px) {
+        font-size: 1.8vw; /* Adjust the font size for larger screens */
+    }
+}
+
+.option-box:hover {
+    border: 2px solid #0073e6; /* Background color change on hover (adjust as needed) */
+    border-radius: 10px;
+    width: 70%;
+}
+
+.option-box a {
+    text-decoration: none;
+    color: #000; /* Text color for the link (adjust as needed) */
+    width: 100%;
+}
+
+.option-box + .option-box {
+    margin-top: 150px; /* Add vertical spacing between option boxes (adjust as needed) */
+}
+
+.input-group-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Align to the center */
+    justify-content: center; /* Center vertically */
+    height: 65vh;
+}
+
+.input-group {
+    display: flex;
+    align-items: center;
+    margin: 4vh;
+    position: relative;
+}
+
+.input-label {
+    width: 5vh;
+    text-align: right;
+    padding-right: 10px;
+    font-size: 3vh;
+}
+
+.input-field {
+    width: 15vw;
+    height: 6vh;
+    font-size: large;
+    text-align: center;
+
+    @media (min-width: 1200px) {
+        width: 10vw; /* Adjust the font size for larger screens */
+    }
+}
+
+.options-container {
+    display: flex;
+    flex-direction: row;
+    text-align: right;
+    height: 6.3vh;
+    font-size: x-large;
+    margin-left: 5px; 
+    background-color: transparent;
+    border: 2px solid #0073e6;
+    border-radius: 6px;
+}
+
+.fill-option {
+    padding: 5px;
+    cursor: pointer;
+    border: none;
+    background-color: transparent;
+    outline: none;
+    border-right: 2px solid #0073e6;
+    width: 6vw;
+    font-size: large;
+
+    @media (min-width: 1200px) {
+        width: 4vw; 
+        font-size: x-large;
+    }
+}
+
+.fill-option:last-child {
+    border-right: none; /* Remove the right border for the last option */
+}
+
+
+
+.button-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 0px;
+    margin-bottom: 0;
+}
+
+.button {
+    padding: 40px 80px; /* Adjust padding as needed */
+    width: 30%;
+    background-color: #0073e6; /* Button background color */
+    color: #fff; /* Button text color */
+    border: 2px solid #fff;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.3s, color 0.3s, border 0.3s; /* Add transition for smooth hover effect */
+}
+
+.button:hover {
+    background-color: #0073e6; /* Change background color on hover */
+    border: 2px solid #0073e6;
+    color: #fff; /* Change text color on hover */
+}
+
+.input {
+    display: flex;
+    font-size: 45px;
+    justify-content: center;
+    align-items: center;
+}
+
+.equals {
+    font-size: 45px;
+}
+
+.results-container {
+    flex: 1; /* Take up the remaining vertical space */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.results {
+    font-size: 40px;
+}
+
+
+#myDialog {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+} 
+
+.ui-dialog {
+    width: 10vh;
+}
+
+.noClose .ui-dialog-titlebar {
+    background-color: #fff;
+    border: none;
+}
+.noClose .ui-dialog-titlebar-close {
+    display: none;
+}
+
+.ui-dialog .ui-dialog-buttonpane {
+    text-align: center;
+ }
+
+ .ui-dialog .ui-dialog-buttonpane .ui-dialog-buttonset {
+    float: none;
+ }
+
+ 
