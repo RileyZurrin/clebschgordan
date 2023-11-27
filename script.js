@@ -1,7 +1,9 @@
-function decimalToFraction (_decimal, maxDenominator) {
+const spacing = "\\hspace{1mm}";
+
+function decimalToFraction (_decimal) {
   // Run only if input is not integer
   if (_decimal % 1 === 0) {
-    return " " + "\\(" + _decimal.toString() + "\\)" + " ";
+    return " " + _decimal.toString() + " ";
   }
   else {
 
@@ -10,20 +12,20 @@ function decimalToFraction (_decimal, maxDenominator) {
   var [num, den] = [frac.n, frac.d];
 
   // Return the simplified fraction as a string
-  return " " + '\\(\\frac{' + num + '}{' + den + '}\\)' + " ";
+  return " " + '\\frac{' + num + '}{' + den + '}' + " ";
     //return (numerator / divisor) + '/' + (powerOf10 / divisor);
   }
 };
 
 // Same as above but adds a square root sign. Meant for CG coefficients
-function Disp_Coeff (Coeff, maxDenominator) {
+function Disp_Coeff (Coeff) {
 
   var frac = math.fraction(Coeff);
 
   var [num, den] = [frac.n, frac.d];
 
   // Return the simplified fraction as a string
-  return '\\(\\sqrt{\\frac{' + num + '}{' + den + '}}\\)';
+  return '\\sqrt{\\frac{' + num + '}{' + den + '}}';
     //return (numerator / divisor) + '/' + (powerOf10 / divisor);
 };
 
@@ -44,23 +46,25 @@ function topCalculate() {
   var j1 = parseFloat(fractionToDecimal(document.getElementById('input3').value));
   var j2 = parseFloat(fractionToDecimal(document.getElementById('input4').value));
 
+
   // Check if the values are valid numbers
   if (topCheck(J, M, j1, j2)) {
+    // Set inputs into storage for display on results page
+    sessionStorage.setItem("input1", decimalToFraction(J));
+    sessionStorage.setItem("input2", decimalToFraction(M));
+    sessionStorage.setItem("input3", decimalToFraction(j1));
+    sessionStorage.setItem("input4", decimalToFraction(j2));
+
       // Perform calculations
     var result = topCompute(J, M, j1, j2);
-
-      // Create a link to the results page with the result as a query parameter
-    var link = document.createElement("a");
-    link.href = "top_res.html?input1=" + decimalToFraction(J,10**6) + "&input2=" + decimalToFraction(M, 10**6) + "&input3=" + decimalToFraction(j1, 10**6) + "&input4=" + decimalToFraction(j2, 10**6) + "&result=" + result;
+    sessionStorage.setItem("result", result);
     
-    // Simulate clicking the link to navigate to the results page
-    document.body.appendChild(link);
-    link.click();
+    // Switch to results page
+    window.location.href = "top_res.html";
   }
-  // Render mathjax for jquery error messages.
+  // Render jquery error messages when inputs are invalid.
   else {
     $("#myDialog").dialog("open");
-    MathJax.typeset();
   }
 }
 
@@ -73,43 +77,43 @@ function botCalculate() {
 
   // Check if the values are valid numbers
   if (botCheck(j1, j2, m1, m2)) {
+
+       // Set inputs into storage for display on results page
+    sessionStorage.setItem("input1", decimalToFraction(j1));
+    sessionStorage.setItem("input2", decimalToFraction(j2));
+    sessionStorage.setItem("input3", decimalToFraction(m1));
+    sessionStorage.setItem("input4", decimalToFraction(m2));
+
       // Perform calculations
     var result = botCompute(j1, j2, m1, m2);
+    sessionStorage.setItem("result", result);
 
-      // Create a link to the results page with the result as a query parameter
-    var link = document.createElement("a");
-    link.href = "bot_res.html?input1=" + decimalToFraction(j1,10**6) + "&input2=" + decimalToFraction(j2, 10**6) + "&input3=" + decimalToFraction(m1, 10**6) + "&input4=" + decimalToFraction(m2, 10**6) + "&result=" + result;
-    
-    // Simulate clicking the link to navigate to the results page
-    document.body.appendChild(link);
-    link.click();
+     // Switch to results page
+    window.location.href = "bot_res.html";
   }
-  // Render mathjax for jquery error messages.
+  // Render jquery error messages when inputs are invalid.
   else {
     $("#myDialog").dialog("open");
-    MathJax.typeset();
   }
 }
 
-
 document.addEventListener("DOMContentLoaded", function () {
-  // Get the result and inputs from the URL query parameters
-  var urlParams = new URLSearchParams(window.location.search);
-  var result = urlParams.get("result");
-  var inputs = urlParams.get("input1") + "\\(\\hspace{2mm} \\)" + urlParams.get("input2") + "\\(\\hspace{2mm} \\)" + urlParams.get("input3") + "\\(\\hspace{2mm} \\)" + urlParams.get("input4");
+  if (window.location.pathname.endsWith("top_res.html") || window.location.pathname.endsWith("bot_res.html")) {
 
-  // Display the result
-  var resultElement = document.getElementById("result");
-  resultElement.textContent = result;
+    // Grab the inputs and result from the calculation.
+    var inputs = "\\big|" + sessionStorage.getItem("input1") + spacing + sessionStorage.getItem("input2") + spacing + sessionStorage.getItem("input3") + spacing + sessionStorage.getItem("input4") + "\\big\\rangle";
+    var result = sessionStorage.getItem("result");
 
-  // Display inputs
-  var inputsElement = document.getElementById("input");
-  inputsElement.innerHTML = "\\(|\\)" + inputs + "\\(\\rangle\\)";
+    // Display the result
+    var resultElement = document.getElementById("result");
+    katex.render(result, resultElement);
 
-  MathJax.typeset();
-
-  resultElement.style.display="inline";
+    // Display inputs
+    var inputsElement = document.getElementById("input");
+    katex.render(inputs, inputsElement);
+  }
 });
+
 
 // Define factorial function
 function factorial(n) {
@@ -148,8 +152,6 @@ function topCompute(J, M, j1, j2) {
           let S = 0;
           const m1 = dm1 / 2;
           const m2 = dm2 / 2;
-          console.log("m1=" + m1);
-          console.log("m2=" + m2);
           const kmax1 = j1 + j2 - J;
           const kmax2 = j1 - m1;
           const kmax3 = j2 + m2;
@@ -160,25 +162,24 @@ function topCompute(J, M, j1, j2) {
             S += summand(k, j1, j2, J, m1, m2);
           }
           
-          console.log("m1 = " + m1, "m2 = " + m2, "S=" + S, "p1=" + p1(J, j1, j2), "p2=" + p2(J, M, j1, m1, j2, m2));
 
           const sign = Math.sign(S);
           const Coeff = p1(J, j1, j2) * p2(J, M, j1, m1, j2, m2) * S ** 2;
           
-          term = "\\(|\\)" + decimalToFraction(j1, denominator) + decimalToFraction(j2, denominator) + decimalToFraction(m1, denominator) + decimalToFraction(m2, denominator) + "\\(\\rangle \\)"
+          term = "\\big|" + decimalToFraction(j1) + spacing + decimalToFraction(j2) + spacing + decimalToFraction(m1) + spacing + decimalToFraction(m2) + "\\big\\rangle"
 
           if (Math.abs(1 - Math.abs(Coeff)) > 1 / denominator) {
             if (sign === 1) {
               if (CG === "") {
-                CG += Disp_Coeff(Coeff, denominator) + term;
+                CG += Disp_Coeff(Coeff) + term;
               } else {
-                CG +=  " " + "\\(%2b\\) " + Disp_Coeff(Coeff, denominator) + term;
+                CG +=  " " + "+ " + Disp_Coeff(Coeff) + term;
               }
             } else if (sign === -1) {
               if (CG === "") {
-                CG += "\\(-\\) " + Disp_Coeff(Coeff, denominator) + term;
+                CG += "- " + Disp_Coeff(Coeff) + term;
               } else {
-                CG += " \\(-\\) " + Disp_Coeff(Coeff, denominator) + term;
+                CG += " - " + Disp_Coeff(Coeff) + term;
               }
             }
           } else {
@@ -186,7 +187,7 @@ function topCompute(J, M, j1, j2) {
               CG += term;
             }
             else {
-              CG += "\\(-|\\)" + term;
+              CG += "-|" + term;
             }
           }
         }
@@ -214,25 +215,24 @@ function botCompute(j1,j2,m1,m2) {
       S += summand(k, j1, j2, J, m1, m2);
     }
     
-    console.log("m1 = " + m1, "m2 = " + m2, "S=" + S, "p1=" + p1(J, j1, j2), "p2=" + p2(J, M, j1, m1, j2, m2));
-
     const sign = Math.sign(S);
     const Coeff = p1(J, j1, j2) * p2(J, M, j1, m1, j2, m2) * S ** 2;
     
-    term = "\\(|\\)" + decimalToFraction(J, denominator) + decimalToFraction(M, denominator) + decimalToFraction(j1, denominator) + decimalToFraction(j2, denominator) + "\\(\\rangle \\)"
+    term = "\\big|" + decimalToFraction(J) + spacing + decimalToFraction(M) + spacing + decimalToFraction(j1) + spacing + decimalToFraction(j2) + "\\big\\rangle"
+
 
     if (Math.abs(1 - Math.abs(Coeff)) > 1 / denominator) {
       if (sign === 1) {
         if (CG === "") {
-          CG += Disp_Coeff(Coeff, denominator) + term;
+          CG += Disp_Coeff(Coeff) + term;
         } else {
-          CG +=  " " + "\\(%2b\\) " + Disp_Coeff(Coeff, denominator) + term;
+          CG +=  " " + "+ " + Disp_Coeff(Coeff) + term;
         }
       } else if (sign === -1) {
         if (CG === "") {
-          CG += "\\(-\\) " + Disp_Coeff(Coeff, denominator) + term;
+          CG += "- " + Disp_Coeff(Coeff) + term;
         } else {
-          CG += " \\(-\\) " + Disp_Coeff(Coeff, denominator) + term;
+          CG += " - " + Disp_Coeff(Coeff) + term;
         }
       }
     } else {
@@ -240,7 +240,7 @@ function botCompute(j1,j2,m1,m2) {
         CG += term;
       }
       else {
-        CG += "\\(-|\\)" + term;
+        CG += "-|" + term;
       }
     }
   }
@@ -279,62 +279,43 @@ $(window).resize(function() {
   }
 });
 
+// Report input errors
+
 // Check if the top values are valid numbers
 function topCheck(J, M, j1, j2) {
+  const Error = document.getElementById("myDialog");
+  const renderError = (content) => katex.render(content, Error);
 
-  var Error = document.getElementById("myDialog");
+  const checkAndRenderError = (condition, content) => {
+    if (condition) {
+      renderError(content);
+      return false;
+    }
+    return true;
+  };
 
-  if (isNaN(J) || isNaN(M) || isNaN(j1) || isNaN(j2)) {
-    Error.textContent = "Each entry must be a number.";
-    return false;
-  }
-  if ((J % (1/2) != 0) || (M % (1/2) != 0) || (j1 % (1/2) != 0) || (j2 % (1/2) != 0)) {
-    Error.textContent = "Each entry must be an integer or a half-integer.";
-    return false;
-  } 
-  var Jarray = Array.from({length: 2*J + 1 }, (_, index) => index - J);
-  if (!Jarray.includes(M)) {
-    Error.textContent = 'Must have ' + ' \\( \\hspace{2mm} M = -J, - J + 1, ..., J - 1, J\\).';
-    return false;
-  }
-  var j1j2 = Array.from({ length: Math.abs(j1 - j2) + j1 + j2 + 1 }, (_, index) => index + j1 - j2);
-  if (!j1j2.includes(J)) {
-    Error.textContent = 'Must have ' + ' \\( \\hspace{2mm} J = |j_1 - j_2|, |j_1 - j_2| + 1, ..., j_1 + j_2\\).';
-    return false;
-  }
-  return true;
+  return checkAndRenderError(isNaN(J) || isNaN(M) || isNaN(j1) || isNaN(j2), "\\text{All entries must be numbers.}") &&
+         checkAndRenderError((J % (1/2) !== 0) || (M % (1/2) !== 0) || (j1 % (1/2) !== 0) || (j2 % (1/2) !== 0), "\\text{All entries must be integers or half-integers.}") &&
+         checkAndRenderError(!Array.from({ length: 2*J + 1 }, (_, index) => index - J).includes(M), '\\text{Must have}  \\hspace{2mm} M = -J, - J + 1, ..., J - 1, J.') &&
+         checkAndRenderError(!Array.from({ length: Math.abs(j1 - j2) + j1 + j2 + 1 }, (_, index) => index + j1 - j2).includes(J), '\\text{Must have}  \\hspace{2mm} J = |j_1 - j_2|, |j_1 - j_2| + 1, ..., j_1 + j_2.');
 }
 
   // Check if the bottom values are valid numbers
   function botCheck(j1, j2, m1, m2) {
-
-    var Error = document.getElementById("myDialog");
-    
-    if (isNaN(j1) || isNaN(j2) || isNaN(m1) || isNaN(m2)) {
-      Error.textContent = 'Each entry must be number.';
-      return false;
-    }
-    if ((j1 % (1/2) != 0) || (j2 % (1/2) != 0) || (m1 % (1/2) != 0) || (m2 % (1/2) != 0)) {
-      Error.textContent = 'Each entry must be an integer or a half-integer.';
-      return false;
-    } 
-
-    if ((j1 <= 0) || (j2 <= 0)) {
-      Error.textContent = '\\(j_1\\) and \\(j_2\\) must be positive.';
-      return false;
-    } 
-
-    var j1array = Array.from({length: 2*j1 + 1 }, (_, index) => index - j1);
-    if (!j1array.includes(m1)) {
-      Error.textContent = 'Must have \\( \\hspace{2mm} m_1 = -j_1, - j_1 + 1, ..., j_1 - 1, j_1\\).';
-      return false;
-    }
-
-    var j2array = Array.from({length: 2*j2 + 1 }, (_, index) => index - j2);
-    if (!j2array.includes(m2)) {
-      Error.textContent = 'Must have \\( \\hspace{2mm} m_2 = -j_2, - j_2 + 1, ..., j_2 - 1, j_2\\).';
-      return false;
-    }
-
-    return true;
-}
+    const Error = document.getElementById("myDialog");
+    const setErrorContent = (content) => Error.textContent = content;
+  
+    const checkAndSetError = (condition, content) => {
+      if (condition) {
+        setErrorContent(content);
+        return false;
+      }
+      return true;
+    };
+  
+    return checkAndSetError(isNaN(j1) || isNaN(j2) || isNaN(m1) || isNaN(m2), '\\text{Each entry must be a number.}') &&
+           checkAndSetError((j1 % (1/2) !== 0) || (j2 % (1/2) !== 0) || (m1 % (1/2) !== 0) || (m2 % (1/2) !== 0), '\\text{Each entry must be an integer or a half-integer.}') &&
+           checkAndSetError((j1 <= 0) || (j2 <= 0), 'j_1 \\text{and} j_2 \\text{must be positive.}') &&
+           checkAndSetError(!Array.from({ length: 2 * j1 + 1 }, (_, index) => index - j1).includes(m1), '\\text{Must have}  \\hspace{2mm} m_1 = -j_1, - j_1 + 1, ..., j_1 - 1, j_1.') &&
+           checkAndSetError(!Array.from({ length: 2 * j2 + 1 }, (_, index) => index - j2).includes(m2), '\\text{Must have}  \\hspace{2mm} m_2 = -j_2, - j_2 + 1, ..., j_2 - 1, j_2.');
+  }
