@@ -46,6 +46,8 @@ function topCalculate() {
   var j1 = parseFloat(fractionToDecimal(document.getElementById('input3').value));
   var j2 = parseFloat(fractionToDecimal(document.getElementById('input4').value));
 
+  console.log(J);
+
 
   // Check if the values are valid numbers
   if (topCheck(J, M, j1, j2)) {
@@ -144,7 +146,7 @@ function summand(k,j1,j2,J,m1,m2) {
 // Define the computation for the top case
 function topCompute(J, M, j1, j2) {
     let CG = "";
-    const denominator = 500000 * J ** 3;
+    const denominator = 500000 * (j1 + j2) ** 3;
   
     for (let dm1 = -2 * j1; dm1 <= 2 * j1 + 1; dm1 += 2) {
       for (let dm2 = -2 * j2; dm2 <= 2 * j2 + 1; dm2 += 2) {
@@ -199,7 +201,7 @@ function topCompute(J, M, j1, j2) {
   // Define the computation for the top case
 function botCompute(j1,j2,m1,m2) {
   let CG = "";
-  const denominator = 500000 * j1 ** 3;
+  const denominator = 500000 * (j1 + j2) ** 3;
   const M = m1 + m2;
 
   for (let dJ = 2 * Math.abs(j1-j2); dJ < 2 * (j1 + j2) + 1; dJ += 2) {
@@ -296,6 +298,7 @@ function topCheck(J, M, j1, j2) {
 
   return checkAndRenderError(isNaN(J) || isNaN(M) || isNaN(j1) || isNaN(j2), "\\text{All entries must be numbers.}") &&
          checkAndRenderError((J % (1/2) !== 0) || (M % (1/2) !== 0) || (j1 % (1/2) !== 0) || (j2 % (1/2) !== 0), "\\text{All entries must be integers or half-integers.}") &&
+         checkAndRenderError(( J < 0), "\\text{Must have} \\hspace{2mm} J \\geq 0") &&
          checkAndRenderError(!Array.from({ length: 2*J + 1 }, (_, index) => index - J).includes(M), '\\text{Must have}  \\hspace{2mm} M = -J, - J + 1, ..., J - 1, J.') &&
          checkAndRenderError(!Array.from({ length: Math.abs(j1 - j2) + j1 + j2 + 1 }, (_, index) => index + j1 - j2).includes(J), '\\text{Must have}  \\hspace{2mm} J = |j_1 - j_2|, |j_1 - j_2| + 1, ..., j_1 + j_2.');
 }
@@ -303,7 +306,7 @@ function topCheck(J, M, j1, j2) {
   // Check if the bottom values are valid numbers
   function botCheck(j1, j2, m1, m2) {
     const Error = document.getElementById("myDialog");
-    const setErrorContent = (content) => Error.textContent = content;
+    const setErrorContent = (content) => katex.render(content, Error);
   
     const checkAndSetError = (condition, content) => {
       if (condition) {
@@ -315,7 +318,7 @@ function topCheck(J, M, j1, j2) {
   
     return checkAndSetError(isNaN(j1) || isNaN(j2) || isNaN(m1) || isNaN(m2), '\\text{Each entry must be a number.}') &&
            checkAndSetError((j1 % (1/2) !== 0) || (j2 % (1/2) !== 0) || (m1 % (1/2) !== 0) || (m2 % (1/2) !== 0), '\\text{Each entry must be an integer or a half-integer.}') &&
-           checkAndSetError((j1 <= 0) || (j2 <= 0), 'j_1 \\text{and} j_2 \\text{must be positive.}') &&
+           checkAndSetError((j1 <= 0) || (j2 <= 0), 'j_1 spacing \\text{and} spacing j_2 spacing \\text{must be positive.}') &&
            checkAndSetError(!Array.from({ length: 2 * j1 + 1 }, (_, index) => index - j1).includes(m1), '\\text{Must have}  \\hspace{2mm} m_1 = -j_1, - j_1 + 1, ..., j_1 - 1, j_1.') &&
            checkAndSetError(!Array.from({ length: 2 * j2 + 1 }, (_, index) => index - j2).includes(m2), '\\text{Must have}  \\hspace{2mm} m_2 = -j_2, - j_2 + 1, ..., j_2 - 1, j_2.');
   }
