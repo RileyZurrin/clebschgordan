@@ -78,10 +78,27 @@ body {
     color: #000; 
     width: 100%;
     height: 100%;
+
 }
+
+.left {
+    color: black;
+}
+
+.right {
+    color: #0073e6;
+}
+
 
 .option-box + .option-box {
     margin-top: 150px; 
+}
+
+.hint-container{
+    display: flex;
+    justify-content: space-between;
+    width: 45vw;
+    font-size: 1.7vw;
 }
 
 .input-group-container {
@@ -235,6 +252,10 @@ body {
     .option-box {
         font-size: 2.2vw;
     }
+    .hint-container {
+        width: 31vw;
+        font-size: 1.2vw;
+    }
 }
 
 @media (max-width: 768px) {
@@ -250,5 +271,9 @@ body {
     .fill-option {
         width: 8vw;
         font-size: large;
+    }
+    .hint-container {
+        width: 60vw;
+        font-size: 2.5vw;
     }
 }

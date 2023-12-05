@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script> 
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script src="script.js?v=1.2"></script>
@@ -31,13 +32,20 @@
     <div class="container">
         <div class="option-box">
             <a href="top.html">
-            \(| J M j_1 j_2 \rangle =\sum\limits_{m_1 m_2} C \  | j_1 j_2 m_1 m_2 \rangle\)
-        </a>
+                <span class="left">\(| J M j_1 j_2 \rangle = \hspace{1mm}\)</span>
+                <span class="right">\(\sum\limits C \ | j_1 j_2 m_1 m_2 \rangle\)</span>
+            </a>
+        </div>
+
+        <div class="hint-container">
+            <span class="left">What you know</span>
+            <span class="right">What you want to know</span>
         </div>
     
         <div class="option-box">
             <a href="bot.html">
-            \(| j_1 j_2 m_1 m_2 \rangle = \sum\limits_{J} C \  | J M j_1 j_2 \rangle\)
+            <span class="left">\(| j_1 j_2 m_1 m_2 \rangle = \hspace{1mm}\)</span>
+            <span class="right">\(\sum\limits C \  | J M j_1 j_2 \rangle\)</span>
         </a>
         </div>       
     </div>
