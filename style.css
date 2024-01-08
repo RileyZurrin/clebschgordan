@@ -27,15 +27,16 @@ body {
 .banner-button {
     position: absolute;
     left: 1.5vw;
-    top: 50%;
+    top: 19%;
     transform: translateY(-50%);
     background-color: #0073e6;
     color: #fff;
     border: 2px solid #fff;
+    border-radius: 10px;
     padding: 1% 2%;
     cursor: pointer;
     text-decoration: none;
-    transition: background-color 0.3s, color 0.3s; 
+    transition: background-color 0.3s, color 0.3s, border 0.3s; 
     font-size: 2vw;
 }
 
@@ -97,8 +98,8 @@ body {
 .hint-container{
     display: flex;
     justify-content: space-between;
-    width: 45vw;
-    font-size: 1.7vw;
+    width: 50vw;
+    font-size: 2.5vw;
 }
 
 .input-group-container {
@@ -244,36 +245,39 @@ body {
     } 
     .banner-button {
         font-size: 1.2vw;
+        top: 22%;
     }
     .fill-option {
         width: 4vw;
         font-size: x-large;
     }
     .option-box {
-        font-size: 2.2vw;
+        font-size: 2.5vw;
     }
     .hint-container {
-        width: 31vw;
-        font-size: 1.2vw;
+        width: 40vw;
+        font-size: 2vw;
     }
 }
 
 @media (max-width: 768px) {
     .banner h1 {
-        font-size: 3.8vw; /* Adjust for smaller screens */
+        font-size: 5vw; /* Adjust for smaller screens */
     }
     .banner-button {
         font-size: 3vw;
+        top: 16%;
     }
     .option-box {
-        font-size: 4.2vw;
+        font-size: 5vw;
+        width: 85%;
     }
     .fill-option {
         width: 8vw;
         font-size: large;
     }
     .hint-container {
-        width: 60vw;
-        font-size: 2.5vw;
+        width: 80vw;
+        font-size: 4vw;
     }
 }
