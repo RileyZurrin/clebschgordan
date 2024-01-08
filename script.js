@@ -175,6 +175,18 @@ function fillInput(inputId, value) {
     document.getElementById(inputId).value = value;
 }
 
+function inputSign(inputId) {
+  v = document.getElementById(inputId).value
+  if (v != 0) {
+    if (v[0] == "-") {
+      document.getElementById(inputId).value = v.substring(1);
+    }
+    else {
+      document.getElementById(inputId).value = "-" + v;
+    }
+  }
+}
+
 // Generate the jQuery UI Dialog
 $("#myDialog").dialog({
   autoOpen: false,
