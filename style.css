@@ -272,6 +272,9 @@ body {
         font-size: 5vw;
         width: 85%;
     }
+    .option-box:hover{
+        width: 85%;
+    }
     .fill-option {
         width: 8vw;
         font-size: large;
