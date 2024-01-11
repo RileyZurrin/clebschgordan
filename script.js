@@ -3,19 +3,33 @@ const spacing = "\\hspace{1mm}";
 function decimalToFraction (_decimal) {
   // Run only if input is not integer
   if (_decimal % 1 === 0) {
-    return " " + _decimal.toString() + " ";
+    // Make negative sign smaller if negative
+    if (_decimal < 0) {
+        _decimal = Math.abs(_decimal);
+        return "{\\footnotesize-}" + _decimal.toString() + " ";
+    }
+    else {
+        return " " + _decimal.toString() + " ";
+    }
   }
   else {
+    var frac = math.fraction(_decimal);
 
-  var frac = math.fraction(_decimal);
+    var [num, den] = [frac.n, frac.d];
 
-  var [num, den] = [frac.n, frac.d];
-
-  // Return the simplified fraction as a string
-  return " " + '\\frac{' + num + '}{' + den + '}' + " ";
-    //return (numerator / divisor) + '/' + (powerOf10 / divisor);
+    // Return the simplified fraction as a string, handling negative numbers properly
+    if (_decimal < 0) {
+        num = Math.abs(num);
+        den = Math.abs(den);
+        return "{\\footnotesize-}" + '\\frac{' + num + '}{' + den + '}' + " ";
+    } else {
+        return " " + '\\frac{' + num + '}{' + den + '}' + " ";
+    }
   }
 };
+
+// Example usage:
+console.log(decimalToFraction(3.5));
 
 // Same as above but adds a square root sign. Meant for CG coefficients
 function Disp_Coeff (Coeff) {
