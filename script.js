@@ -122,7 +122,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Display the result
     var resultElement = document.getElementById("result");
-    katex.render(result, resultElement);
+    katex.render(result, resultElement, {maxExpand: Infinity});
 
     // Display inputs
     var inputsElement = document.getElementById("input");
