@@ -1,0 +1,7 @@
+# Files that should NOT be published as part of the static site.
+.git
+.github
+.gitignore
+.assetsignore
+wrangler.jsonc
+README.md

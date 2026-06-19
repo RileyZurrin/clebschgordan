@@ -1,0 +1,10 @@
+{
+  // Static-assets-only Worker (no server code): Cloudflare serves the repo's
+  // files directly. This is what the "Create application → import repository"
+  // flow runs via `npx wrangler deploy`.
+  "name": "clebschgordan",
+  "compatibility_date": "2026-06-19",
+  "assets": {
+    "directory": "."
+  }
+}
