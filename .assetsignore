@@ -3,5 +3,6 @@
 .github
 .gitignore
 .assetsignore
+.wrangler
 wrangler.jsonc
 README.md

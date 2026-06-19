@@ -5,6 +5,8 @@
   "name": "clebschgordan",
   "compatibility_date": "2026-06-19",
   "assets": {
+    // Default html handling keeps "/" -> index.html working; sub-pages like
+    // /top.html resolve via a temporary redirect to /top (existing URLs stay indexed).
     "directory": "."
   }
 }
