@@ -3,6 +3,12 @@
 body {
     font-family: "Montserrat", sans-serif;
     text-align: center;
+    margin: 0;
+    padding: 8px;
+    box-sizing: border-box;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 .banner {
@@ -102,18 +108,26 @@ body {
     font-size: 2.5vw;
 }
 
+/* The form fills the screen below the banner; the input area flexes so it can
+   give up whitespace to the error message instead of pushing the button / scrolling. */
+#cg-form {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* center inputs + error + button as one group */
+}
+
 .input-group-container {
     display: flex;
     flex-direction: column;
-    align-items: center; 
-    justify-content: center; 
-    height: 65vh;
+    align-items: center;
+    justify-content: center;
+    gap: 4vh; /* spacing between rows, with no trailing margin below the last one */
 }
 
 .input-group {
     display: flex;
     align-items: center;
-    margin: 4vh;
     position: relative;
 }
 
@@ -165,25 +179,56 @@ body {
     display: flex;
     justify-content: center;
     margin-top: 0px;
-    margin-bottom: 0;
+    margin-bottom: 2vh;
 }
 
 .button {
-    padding: 40px 80px; 
-    width: 30%;
-    background-color: #0073e6; 
-    color: #fff; 
+    padding: 40px 80px;
+    background-color: #0073e6;
+    color: #fff;
     border: 2px solid #fff;
     border-radius: 5px;
     cursor: pointer;
     text-decoration: none;
-    transition: background-color 0.3s, color 0.3s, border 0.3s; 
+    transition: background-color 0.3s, color 0.3s, border 0.3s;
+    font-family: inherit;
+    font-size: 1.1rem;
 }
 
 .button:hover {
     background-color: #0073e6; 
     border: 2px solid #0073e6;
     color: #fff; 
+}
+
+/* Fixed-height reserved slot with the error centered in it. Always present (no shift),
+   and because the inputs above have no trailing margin and the button below no top margin,
+   the error ends up equidistant from both. */
+.status {
+    min-height: 6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Validation alert: a soft rounded pill that appears inside the reserved .status slot. */
+.error {
+    display: none;
+    margin: 0;
+    max-width: min(90vw, 36rem);
+    color: #c0392b;
+    background: #fdecea;
+    border: 1px solid #f3c0bb;
+    border-radius: 12px;
+    font-size: 20px;
+    text-align: center;
+    padding: 1.6vh 1.5rem;
+    animation: error-in 0.25s ease;
+}
+
+@keyframes error-in {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: none; }
 }
 
 .input {
@@ -198,43 +243,19 @@ body {
 }
 
 .results-container {
-    flex: 1; 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    padding: 0 1rem 2vh;
 }
 
+/* Terms flow and wrap at term boundaries; the result grows downward instead of
+   scrolling sideways on narrow screens. */
 .results {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: baseline;
+    gap: 0.15em 0.4em;
     font-size: 40px;
 }
-
-
-#myDialog {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: "Montserrat", sans-serif;
-} 
-
-.ui-dialog {
-    width: 10vh;
-}
-
-.noClose .ui-dialog-titlebar {
-    background-color: #fff;
-    border: none;
-}
-.noClose .ui-dialog-titlebar-close {
-    display: none;
-}
-
-.ui-dialog .ui-dialog-buttonpane {
-    text-align: center;
- }
-
- .ui-dialog .ui-dialog-buttonpane .ui-dialog-buttonset {
-    float: none;
- }
 
  @media (min-width: 1200px) {
     .banner h1 {
@@ -282,5 +303,14 @@ body {
     .hint-container {
         width: 80vw;
         font-size: 4vw;
+    }
+    .input, .equals {
+        font-size: 28px;
+    }
+    .results {
+        font-size: 24px;
+    }
+    .error {
+        font-size: 16px;
     }
 }

@@ -1,323 +1,310 @@
+// ============================================================
+//  Clebsch-Gordan calculator
+//  No external runtime deps (jQuery / jQuery UI / math.js removed).
+// ============================================================
+
 const spacing = "\\hspace{1mm}";
+const TOL = 1e-9;
+const MAXFAC = 170; // factorial(171) overflows a double, so reject inputs beyond this
 
-function decimalToFraction (_decimal) {
-  // Run only if input is not integer
+// ---------- number helpers ----------
+
+// Convert a finite number to an exact rational {n, d} using continued-fraction
+// convergents. Replaces math.fraction; verified against textbook CG values.
+function fraction(value) {
+  if (!isFinite(value)) return { n: value, d: 1 };
+  const sign = value < 0 ? -1 : 1;
+  value = Math.abs(value);
+  if (value === 0) return { n: 0, d: 1 };
+  const maxDen = 1e9, eps = 1e-12;
+  let h0 = 0, h1 = 1, k0 = 1, k1 = 0, x = value;
+  for (let i = 0; i < 64; i++) {
+    const a = Math.floor(x);
+    const h2 = a * h1 + h0, k2 = a * k1 + k0;
+    if (k2 > maxDen) break;
+    h0 = h1; h1 = h2; k0 = k1; k1 = k2;
+    if (Math.abs(value - h1 / k1) <= value * eps) break;
+    const frac = x - a;
+    if (frac === 0) break;
+    x = 1 / frac;
+    if (!isFinite(x)) break;
+  }
+  return { n: sign * h1, d: k1 };
+}
+
+// Parse a user entry like "1/2", "-3/2", "2" into a number (empty -> NaN).
+function fractionToDecimal(value) {
+  value = String(value).trim();
+  if (value === "") return NaN;
+  const y = value.split("/");
+  if (y.length > 1) return parseFloat(y[0]) / parseFloat(y[1]);
+  return parseFloat(value);
+}
+
+// Number -> display LaTeX (integer or \frac), with a small negative sign.
+function decimalToFraction(_decimal) {
   if (_decimal % 1 === 0) {
-    // Make negative sign smaller if negative
-    if (_decimal < 0) {
-        _decimal = Math.abs(_decimal);
-        return "{\\footnotesize-}" + _decimal.toString() + " ";
-    }
-    else {
-        return " " + _decimal.toString() + " ";
-    }
+    if (_decimal < 0) return "{\\footnotesize-}" + Math.abs(_decimal).toString() + " ";
+    return " " + _decimal.toString() + " ";
   }
-  else {
-    var frac = math.fraction(_decimal);
-
-    var [num, den] = [frac.n, frac.d];
-
-    // Return the simplified fraction as a string, handling negative numbers properly
-    if (_decimal < 0) {
-        num = Math.abs(num);
-        den = Math.abs(den);
-        return "{\\footnotesize-}" + '\\frac{' + num + '}{' + den + '}' + " ";
-    } else {
-        return " " + '\\frac{' + num + '}{' + den + '}' + " ";
-    }
-  }
-};
-
-// Example usage:
-console.log(decimalToFraction(3.5));
-
-// Same as above but adds a square root sign. Meant for CG coefficients
-function Disp_Coeff (Coeff) {
-
-  var frac = math.fraction(Coeff);
-
-  var [num, den] = [frac.n, frac.d];
-
-  // Return the simplified fraction as a string
-  return '\\sqrt{\\frac{' + num + '}{' + den + '}}';
-    //return (numerator / divisor) + '/' + (powerOf10 / divisor);
-};
-
-function fractionToDecimal (fraction) {
-  var y = fraction.split('/');
-    if (y.length > 1) {
-        return (y[0] / y[1])
-    }
-    else {
-        return y[0]
-    }
+  const f = fraction(_decimal);
+  const num = Math.abs(f.n), den = Math.abs(f.d);
+  if (_decimal < 0) return "{\\footnotesize-}" + "\\frac{" + num + "}{" + den + "}" + " ";
+  return " " + "\\frac{" + num + "}{" + den + "}" + " ";
 }
 
-function topCalculate() {
-  // Get values from input fields
-  var J = parseFloat(fractionToDecimal(document.getElementById('input1').value));
-  var M = parseFloat(fractionToDecimal(document.getElementById('input2').value));
-  var j1 = parseFloat(fractionToDecimal(document.getElementById('input3').value));
-  var j2 = parseFloat(fractionToDecimal(document.getElementById('input4').value));
+// CG coefficient (rational under a square root), used in the expansion.
+function Disp_Coeff(n, d) {
+  return "\\sqrt{\\frac{" + n.toString() + "}{" + d.toString() + "}}";
+}
 
-  console.log(J);
+// ---------- validation ----------
+// Each returns an error message (LaTeX) or "" when the inputs are valid.
 
+function isHalfInteger(x) { return x % 0.5 === 0; }
 
-  // Check if the values are valid numbers
-  if (topCheck(J, M, j1, j2)) {
-    // Set inputs into storage for display on results page
-    sessionStorage.setItem("input1", decimalToFraction(J));
-    sessionStorage.setItem("input2", decimalToFraction(M));
-    sessionStorage.setItem("input3", decimalToFraction(j1));
-    sessionStorage.setItem("input4", decimalToFraction(j2));
+// value is a member of {-max, -max+1, ..., max}
+function inLadder(value, max) {
+  if (value < -max - TOL || value > max + TOL) return false;
+  return Math.abs((value + max) - Math.round(value + max)) < TOL;
+}
 
-      // Perform calculations
-    var result = topCompute(J, M, j1, j2);
-    sessionStorage.setItem("result", result);
-    
-    // Switch to results page
-    window.location.href = "top_res.html";
+// J satisfies |j1-j2| <= J <= j1+j2 in integer steps (correct triangle rule)
+function triangleOK(J, j1, j2) {
+  const lo = Math.abs(j1 - j2), hi = j1 + j2;
+  if (J < lo - TOL || J > hi + TOL) return false;
+  return Math.abs((J - lo) - Math.round(J - lo)) < TOL;
+}
+
+function topError(J, M, j1, j2) {
+  if (isNaN(J) || isNaN(M) || isNaN(j1) || isNaN(j2))
+    return "\\text{All entries must be numbers}";
+  if (!isHalfInteger(J) || !isHalfInteger(M) || !isHalfInteger(j1) || !isHalfInteger(j2))
+    return "\\text{All entries must be integers or half-integers}";
+  if (J < 0)
+    return "\\text{Must have} \\hspace{2mm} J \\geq 0";
+  if (!inLadder(M, J))
+    return "\\text{Must have}  \\hspace{2mm} M = -J, - J + 1, ..., J - 1, J";
+  if (!triangleOK(J, j1, j2))
+    return "\\text{Must have}  \\hspace{2mm} J = |j_1 - j_2|, |j_1 - j_2| + 1, ..., j_1 + j_2";
+  if (j1 + j2 + J + 1 > MAXFAC) // largest factorial argument the computation will hit
+    return "\\text{Inputs are too large}";
+  return "";
+}
+
+function botError(j1, j2, m1, m2) {
+  if (isNaN(j1) || isNaN(j2) || isNaN(m1) || isNaN(m2))
+    return "\\text{Each entry must be a number}";
+  if (!isHalfInteger(j1) || !isHalfInteger(j2) || !isHalfInteger(m1) || !isHalfInteger(m2))
+    return "\\text{Each entry must be an integer or a half-integer}";
+  if (j1 <= 0 || j2 <= 0)
+    return "j_1 \\hspace{1mm} \\text{and} \\hspace{1mm} j_2 \\hspace{1mm} \\text{must be positive}";
+  if (!inLadder(m1, j1))
+    return "\\text{Must have}  \\hspace{2mm} m_1 = -j_1, - j_1 + 1, ..., j_1 - 1, j_1";
+  if (!inLadder(m2, j2))
+    return "\\text{Must have}  \\hspace{2mm} m_2 = -j_2, - j_2 + 1, ..., j_2 - 1, j_2";
+  if (2 * (j1 + j2) + 1 > MAXFAC) // largest factorial argument over the J sum
+    return "\\text{Inputs are too large}";
+  return "";
+}
+
+// ---------- core CG computation ----------
+
+// ---------- exact rational arithmetic (BigInt) ----------
+// CG^2 is always rational; computing it with BigInt keeps every coefficient exact
+// for any input (floating-point factorials lose exactness above ~18!).
+
+function gcdBig(a, b) { a = a < 0n ? -a : a; b = b < 0n ? -b : b; while (b) { [a, b] = [b, a % b]; } return a; }
+
+function makeRat(n, d) {
+  if (d < 0n) { n = -n; d = -d; }
+  if (d === 0n) return { n: 0n, d: 1n }; // defensive; not reached for valid inputs
+  const g = gcdBig(n, d) || 1n;
+  return { n: n / g, d: d / g };
+}
+
+function ratAdd(a, b) { return makeRat(a.n * b.d + b.n * a.d, a.d * b.d); }
+function ratMul(a, b) { return makeRat(a.n * b.n, a.d * b.d); }
+
+// factorial of a (rounded) integer; 0 for negative args, matching the CG convention
+// that out-of-range terms vanish.
+function factBig(x) {
+  const n = Math.round(x);
+  if (n < 0) return 0n;
+  let r = 1n;
+  for (let i = 2; i <= n; i++) r *= BigInt(i);
+  return r;
+}
+
+// Exact |CG|^2 (rational) and the sign of the coefficient, via the Racah formula.
+function cgSquared(J, M, j1, j2, m1, m2) {
+  const p1 = makeRat(
+    BigInt(Math.round(2 * J + 1)) * factBig(J + j1 - j2) * factBig(J - j1 + j2) * factBig(j1 + j2 - J),
+    factBig(j1 + j2 + J + 1));
+  const p2 = makeRat(
+    factBig(J + M) * factBig(J - M) * factBig(j1 - m1) * factBig(j1 + m1) * factBig(j2 - m2) * factBig(j2 + m2),
+    1n);
+
+  const kmin = Math.round(Math.max(j2 - J - m1, j1 + m2 - J, 0));
+  const kmax = Math.round(Math.min(j1 + j2 - J, j1 - m1, j2 + m2));
+  let S = { n: 0n, d: 1n };
+  for (let k = kmin; k <= kmax; k++) {
+    const denom = factBig(k) * factBig(j1 + j2 - J - k) * factBig(j1 - m1 - k) * factBig(j2 + m2 - k) * factBig(J - j2 + m1 + k) * factBig(J - j1 - m2 + k);
+    S = ratAdd(S, makeRat(k % 2 === 0 ? 1n : -1n, denom));
   }
-  // Render jquery error messages when inputs are invalid.
-  else {
-    $("#myDialog").dialog("open");
+
+  const sign = S.n > 0n ? 1 : (S.n < 0n ? -1 : 0);
+  const cg2 = ratMul(ratMul(p1, p2), ratMul(S, S)); // CG^2 = p1 * p2 * S^2
+  return { sign, n: cg2.n, d: cg2.d };
+}
+
+// coupled -> uncoupled: sum over m1, m2 (with m1 + m2 = M). Returns an array of term LaTeX.
+function topCompute(J, M, j1, j2) {
+  const terms = [];
+  for (let dm1 = -2 * j1; dm1 <= 2 * j1 + 1; dm1 += 2) {
+    for (let dm2 = -2 * j2; dm2 <= 2 * j2 + 1; dm2 += 2) {
+      if (dm1 + dm2 === 2 * M) {
+        calc(J, M, j1, j2, dm1 / 2, dm2 / 2, "top", terms);
+      }
+    }
+  }
+  return terms;
+}
+
+// uncoupled -> coupled: sum over J (with M = m1 + m2). Returns an array of term LaTeX.
+function botCompute(j1, j2, m1, m2) {
+  const terms = [];
+  const M = m1 + m2;
+  for (let dJ = 2 * Math.abs(j1 - j2); dJ < 2 * (j1 + j2) + 1; dJ += 2) {
+    calc(dJ / 2, M, j1, j2, m1, m2, "bottom", terms);
+  }
+  return terms;
+}
+
+// Compute one term; if non-zero, push its LaTeX (with a leading +/- operator) to `terms`.
+// Each term is rendered as its own unit so the result can word-wrap at term boundaries.
+function calc(J, M, j1, j2, m1, m2, topOrBottom, terms) {
+  const { sign, n, d } = cgSquared(J, M, j1, j2, m1, m2);
+  if (n === 0n) return; // zero coefficient -> no term
+
+  let ket;
+  if (topOrBottom === "top") {
+    ket = "\\big|" + decimalToFraction(j1) + spacing + decimalToFraction(j2) + spacing + decimalToFraction(m1) + spacing + decimalToFraction(m2) + "\\big\\rangle";
+  } else {
+    ket = "\\big|" + decimalToFraction(J) + spacing + decimalToFraction(M) + spacing + decimalToFraction(j1) + spacing + decimalToFraction(j2) + "\\big\\rangle";
+  }
+
+  const first = terms.length === 0;
+  const coeff = n === d ? "" : Disp_Coeff(n, d); // |CG| = 1 -> show the ket alone
+  const op = sign === -1 ? "-" : (first ? "" : "+");
+  terms.push(op + coeff + ket);
+}
+
+// ---------- page wiring (input form + inline results + shareable URL) ----------
+
+const MODES = {
+  top: { names: ["J", "M", "j1", "j2"], compute: topCompute, error: topError },
+  bot: { names: ["j1", "j2", "m1", "m2"], compute: botCompute, error: botError },
+};
+
+function rawValues() {
+  return [1, 2, 3, 4].map(i => document.getElementById("input" + i).value.trim());
+}
+
+function showError(latex) {
+  const el = document.getElementById("error");
+  if (!el) return;
+  if (latex) {
+    katex.render(latex, el, { throwOnError: false });
+    el.style.display = "block";
+  } else {
+    el.textContent = "";
+    el.style.display = "none";
   }
 }
 
-function botCalculate() {
-  // Get values from input fields
-  var j1 = parseFloat(fractionToDecimal(document.getElementById('input1').value));
-  var j2 = parseFloat(fractionToDecimal(document.getElementById('input2').value));
-  var m1 = parseFloat(fractionToDecimal(document.getElementById('input3').value));
-  var m2 = parseFloat(fractionToDecimal(document.getElementById('input4').value));
+// Render the decomposition as  |input> = sum of terms, with each term its own unit
+// so the sum wraps at term boundaries (vertical growth, no horizontal scroll).
+function renderOutput(mode, nums) {
+  const terms = MODES[mode].compute(nums[0], nums[1], nums[2], nums[3]);
+  const inputKet = "\\big|" + nums.map(decimalToFraction).join(spacing) + "\\big\\rangle";
+  katex.render(inputKet, document.getElementById("input"), { throwOnError: false });
 
-  // Check if the values are valid numbers
-  if (botCheck(j1, j2, m1, m2)) {
+  const resultEl = document.getElementById("result");
+  resultEl.innerHTML = "";
+  (terms.length ? terms : ["0"]).forEach(t => {
+    const span = document.createElement("span");
+    span.className = "term-piece";
+    katex.render(t, span, { maxExpand: Infinity, throwOnError: false });
+    resultEl.appendChild(span);
+  });
+}
 
-       // Set inputs into storage for display on results page
-    sessionStorage.setItem("input1", decimalToFraction(j1));
-    sessionStorage.setItem("input2", decimalToFraction(j2));
-    sessionStorage.setItem("input3", decimalToFraction(m1));
-    sessionStorage.setItem("input4", decimalToFraction(m2));
+function inputPage(mode) { return mode === "top" ? "top.html" : "bot.html"; }
+function resultPage(mode) { return mode === "top" ? "top_res.html" : "bot_res.html"; }
 
-      // Perform calculations
-    var result = botCompute(j1, j2, m1, m2);
-    sessionStorage.setItem("result", result);
+function queryString(cfg, raw) {
+  return cfg.names.map((n, i) => encodeURIComponent(n) + "=" + encodeURIComponent(raw[i])).join("&");
+}
 
-     // Switch to results page
-    window.location.href = "bot_res.html";
-  }
-  // Render jquery error messages when inputs are invalid.
-  else {
-    $("#myDialog").dialog("open");
+// Validate the form; on success go to the results page with the inputs in the URL.
+function submitInputs(mode) {
+  const cfg = MODES[mode];
+  const raw = rawValues();
+  const nums = raw.map(fractionToDecimal);
+  const err = cfg.error(nums[0], nums[1], nums[2], nums[3]);
+  if (err) { showError(err); return; }
+  showError("");
+  const qs = queryString(cfg, raw);
+  // Stamp this page's history entry so the browser Back button restores the inputs.
+  history.replaceState(null, "", "?" + qs);
+  location.href = resultPage(mode) + "?" + qs;
+}
+
+function fillInput(inputId, value) {
+  document.getElementById(inputId).value = value;
+}
+
+function inputSign(inputId) {
+  let v = document.getElementById(inputId).value;
+  if (v != 0) {
+    if (v[0] === "-") document.getElementById(inputId).value = v.substring(1);
+    else document.getElementById(inputId).value = "-" + v;
   }
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-  if (window.location.pathname.endsWith("top_res.html") || window.location.pathname.endsWith("bot_res.html")) {
-
-    // Grab the inputs and result from the calculation.
-    var inputs = "\\big|" + sessionStorage.getItem("input1") + spacing + sessionStorage.getItem("input2") + spacing + sessionStorage.getItem("input3") + spacing + sessionStorage.getItem("input4") + "\\big\\rangle";
-    var result = sessionStorage.getItem("result");
-
-    // Display the result
-    var resultElement = document.getElementById("result");
-    katex.render(result, resultElement, {maxExpand: Infinity});
-
-    // Display inputs
-    var inputsElement = document.getElementById("input");
-    katex.render(inputs, inputsElement);
-  }
+  const form = document.getElementById("cg-form");
+  if (form) return initInputPage(form);
+  const result = document.getElementById("cg-result");
+  if (result) return initResultPage(result);
 });
 
+// Input page: restore any inputs from the URL, and submit to the results page.
+function initInputPage(form) {
+  const mode = form.dataset.mode;
+  const cfg = MODES[mode];
+  const params = new URLSearchParams(location.search);
+  cfg.names.forEach((n, i) => {
+    if (params.has(n)) document.getElementById("input" + (i + 1)).value = params.get(n);
+  });
+  form.addEventListener("submit", function (e) { e.preventDefault(); submitInputs(mode); });
+}
 
-// Define factorial function
-function factorial(n) {
-  if (n < 0) {
-    return 0;
+// Results page: read inputs from the URL, render the decomposition, wire up Back.
+function initResultPage(result) {
+  const mode = result.dataset.mode;
+  const cfg = MODES[mode];
+  const params = new URLSearchParams(location.search);
+  const nums = cfg.names.map(n => fractionToDecimal(params.get(n)));
+
+  // Visited directly, or with bad inputs: bounce back to the form (carrying the values).
+  if (!cfg.names.every(n => params.has(n)) || cfg.error(nums[0], nums[1], nums[2], nums[3])) {
+    location.replace(inputPage(mode) + location.search);
+    return;
   }
-  if (n === 0) {
-    return 1;
-  }
-  return n * factorial(n - 1);
+
+  const back = document.getElementById("back-link");
+  if (back) back.href = inputPage(mode) + location.search; // Back keeps the numbers
+  renderOutput(mode, nums);
 }
-
-// Define the first multiplier
-function p1(J,j1,j2) {
-    return ((2*J + 1)*factorial(J + j1 - j2)*factorial(J - j1 + j2)*factorial(j1 + j2 - J))/(factorial(j1 + j2 + J +1))
-}
-
-// Define the second multipliers (top and bottom)
-function p2(J,M,j1,m1,j2,m2) {
-    return factorial(J + M)*factorial(J - M)*factorial(j1 - m1)*factorial(j1 + m1)*factorial(j2 - m2)*factorial(j2 + m2)
-}
-
-// Lastly, define the third multiplier
-function summand(k,j1,j2,J,m1,m2) {
-    return ((-1)**k)/(factorial(k)*factorial(j1 + j2 - J - k)*factorial(j1 - m1 - k)*factorial(j2 + m2 - k)*factorial(J - j2 + m1 + k)*factorial(J - j1 - m2 + k))
-}
-
-// Define the computation for the top case
-function topCompute(J, M, j1, j2) {
-  let CG = "";
-
-  for (let dm1 = -2 * j1; dm1 <= 2 * j1 + 1; dm1 += 2) {
-    for (let dm2 = -2 * j2; dm2 <= 2 * j2 + 1; dm2 += 2) {
-      if (dm1 + dm2 === 2 * M) {
-        const m1 = dm1 / 2;
-        const m2 = dm2 / 2;
-        CG = calc(J, M, j1, j2, m1, m2, "top", CG);
-      }
-    }
-  }
-  return CG;
-}
-
-  // Define the computation for the bottom case
-function botCompute(j1,j2,m1,m2) {
-  let CG = "";
-  const M = m1 + m2;
-
-  for (let dJ = 2 * Math.abs(j1-j2); dJ < 2 * (j1 + j2) + 1; dJ += 2) {
-    const J = dJ / 2;
-    CG = calc(J, M, j1, j2, m1, m2, "bottom", CG);
-  }
-  return CG;
-}
-
-function fillInput(inputId, value) {
-    document.getElementById(inputId).value = value;
-}
-
-function inputSign(inputId) {
-  v = document.getElementById(inputId).value
-  if (v != 0) {
-    if (v[0] == "-") {
-      document.getElementById(inputId).value = v.substring(1);
-    }
-    else {
-      document.getElementById(inputId).value = "-" + v;
-    }
-  }
-}
-
-// Generate the jQuery UI Dialog
-$("#myDialog").dialog({
-  autoOpen: false,
-  resizable: false,
-  modal: true,
-  width: 'auto',
-  dialogClass: "noClose",
-  buttons: {
-    Ok: {
-      text: "Ok",
-      click: function() {
-        $(this).dialog("close");
-      },
-      style: "background-color: #0073e6; border: none; padding: 1vh 15vh; font-size: 16px; border-radius: 30px; color: white;"
-    }
-  }
-});
-
-$(window).resize(function() {
-  if ($("#myDialog").dialog("isOpen")) {
-    $("#myDialog").dialog('widget').position({
-      my: 'center',
-      at: 'center',
-      of: window
-    });
-  }
-});
-
-// Report input errors
-
-// Check if the top values are valid numbers
-function topCheck(J, M, j1, j2) {
-  const Error = document.getElementById("myDialog");
-  const renderError = (content) => katex.render(content, Error);
-
-  const checkAndRenderError = (condition, content) => {
-    if (condition) {
-      renderError(content);
-      return false;
-    }
-    return true;
-  };
-
-  return checkAndRenderError(isNaN(J) || isNaN(M) || isNaN(j1) || isNaN(j2), "\\text{All entries must be numbers.}") &&
-         checkAndRenderError((J % (1/2) !== 0) || (M % (1/2) !== 0) || (j1 % (1/2) !== 0) || (j2 % (1/2) !== 0), "\\text{All entries must be integers or half-integers.}") &&
-         checkAndRenderError(p2(J, M, j1, j1, j2, j2) == "Infinity" || p1(J, j1, j2) == "Infinity", '\\text{Inputs are too large.}') &&
-         checkAndRenderError(( J < 0), "\\text{Must have} \\hspace{2mm} J \\geq 0") &&
-         checkAndRenderError(!Array.from({ length: 2*J + 1 }, (_, index) => index - J).includes(M), '\\text{Must have}  \\hspace{2mm} M = -J, - J + 1, ..., J - 1, J.') &&
-         checkAndRenderError(!Array.from({ length: Math.abs(j1 - j2) + j1 + j2 + 1 }, (_, index) => index + j1 - j2).includes(J), '\\text{Must have}  \\hspace{2mm} J = |j_1 - j_2|, |j_1 - j_2| + 1, ..., j_1 + j_2.');
-}
-
-// Check if the bottom values are valid numbers
-function botCheck(j1, j2, m1, m2) {
-  const Error = document.getElementById("myDialog");
-  const setErrorContent = (content) => katex.render(content, Error);
-
-  const checkAndSetError = (condition, content) => {
-    if (condition) {
-      setErrorContent(content);
-      return false;
-    }
-    return true;
-  };
-
-  return checkAndSetError(isNaN(j1) || isNaN(j2) || isNaN(m1) || isNaN(m2), '\\text{Each entry must be a number.}') &&
-          checkAndSetError((j1 % (1/2) !== 0) || (j2 % (1/2) !== 0) || (m1 % (1/2) !== 0) || (m2 % (1/2) !== 0), '\\text{Each entry must be an integer or a half-integer.}') &&
-          checkAndSetError((j1 <= 0) || (j2 <= 0), 'j_1 \\hspace{1mm} \\text{and} \\hspace{1mm} j_2 \\hspace{1mm} \\text{must be positive.}') &&
-          checkAndSetError(p2(j1 + j2, m1 + m2, j1, m1, j2, m2) == "Infinity" || p1(j1 + j2, j1, j2) == "Infinity" || p1(0, j1, j2) == "Infinity", '\\text{Inputs are too large.}') &&
-          checkAndSetError(!Array.from({ length: 2 * j1 + 1 }, (_, index) => index - j1).includes(m1), '\\text{Must have}  \\hspace{2mm} m_1 = -j_1, - j_1 + 1, ..., j_1 - 1, j_1.') &&
-          checkAndSetError(!Array.from({ length: 2 * j2 + 1 }, (_, index) => index - j2).includes(m2), '\\text{Must have}  \\hspace{2mm} m_2 = -j_2, - j_2 + 1, ..., j_2 - 1, j_2.');
-}
-
-// Core of CG-Coeff computations
-function calc(J, M, j1, j2, m1, m2, topOrBottom, CG) {
-  let S = 0;
-  const denominator = 500000 * (j1 + j2) ** 3;
-
-  // Calculate K limits
-  const kmin = Math.max(j2 - J - m1, j1 + m2 - J, 0);
-  const kmax = Math.min(j1 + j2 - J, j1 - m1, j2 + m2);
-
-  // Find summand
-  for (let k = kmin; k <= kmax; k++) {
-    S += summand(k, j1, j2, J, m1, m2);
-  }
-  
-  // Calculate Coeff
-  const sign = Math.sign(S);
-  const Coeff = p1(J, j1, j2) * p2(J, M, j1, m1, j2, m2) * S ** 2;
-
-  // Print term dependent on direction of calculation
-  if (topOrBottom === "top") {
-    term = "\\big|" + decimalToFraction(j1) + spacing + decimalToFraction(j2) + spacing + decimalToFraction(m1) + spacing + decimalToFraction(m2) + "\\big\\rangle"
-  } else if (topOrBottom == "bottom") {
-    term = "\\big|" + decimalToFraction(J) + spacing + decimalToFraction(M) + spacing + decimalToFraction(j1) + spacing + decimalToFraction(j2) + "\\big\\rangle"
-  } 
-  
-  // Append term appropriate to the current output.
-  if (math.fraction(Coeff).n != 0){
-    if (Math.abs(1 - Math.abs(Coeff)) > 1 / denominator) {
-      if (sign === 1) {
-        if (CG === "") {
-          CG += Disp_Coeff(Coeff) + term;
-        } else {
-          CG +=  " " + "+ " + Disp_Coeff(Coeff) + term;
-        }
-      } else if (sign === -1) {
-        if (CG === "") {
-          CG += "- " + Disp_Coeff(Coeff) + term;
-        } else {
-          CG += " - " + Disp_Coeff(Coeff) + term;
-        }
-      }
-    } else {
-      CG += term;
-    }
-  }
-  return CG;
-}
-
